@@ -30,6 +30,8 @@ func main() {
 
 	r.HandleFunc("/", indexHandler)
 
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
+
 	log.Print("Listening at port ", port)
 	log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
 }

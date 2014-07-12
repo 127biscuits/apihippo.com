@@ -1,8 +1,42 @@
-<html>
-  <head>
-    <title>apihippo.com</title>
-  </head>
-  <body>
-    I trust Iván to put something amazing here
-  </body>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="API for Hippos">
+  <meta name="author" content="Iván Pedrazas & Álex González">
+  <title>apihippo</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+
+<body>
+  <div class="menuItems">
+    <ul class="nav">
+      <li><a href="get_started.html">Get started</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </div>
+  <h1 class="title">apihippo.com</h1>
+  <h2 class="subtitle"><a href="#" class="verb" data-verb="get">GET</a> | POST | PUT <br/><span class="hippo">a Hippo</span></h2>
+  <div class="details">Hippo Details</div>
+  <img src="/img/hippoheader-1100x198.jpg" class="banner">
+
+  <!-- Piwik -->
+  <script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u=(("https:" == document.location.protocol) ? "https" : "http") + "://analytics.ccs.im/";
+      _paq.push(['setTrackerUrl', u+'piwik.php']);
+      _paq.push(['setSiteId', 3]);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0]; g.type='text/javascript';
+      g.defer=true; g.async=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+  <noscript><p><img src="http://analytics.ccs.im/piwik.php?idsite=3" style="border:0;" alt="" /></p></noscript>
+  <!-- End Piwik Code -->
+  <script type="text/javascript" src="/js/lib/jquery/jquery-1.9.1.js"></script>
+  <script type="text/javascript" src="/js/apihippo.js"></script>
+</body>
 </html>
