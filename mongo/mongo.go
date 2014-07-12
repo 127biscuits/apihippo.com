@@ -1,7 +1,10 @@
 package mongo
 
 import (
+	"bufio"
+	"io"
 	"log"
+	"mime/multipart"
 	"os"
 
 	"labix.org/v2/mgo"
@@ -44,4 +47,45 @@ func init() {
 
 	DB = sess.DB("apihippo")
 	Collection = DB.C("hippos")
+}
+
+// InsertHippo will store the Hippo on GridFS and return the Hippo document
+// created
+func InsertHippo(file multipart.File) (*Hippo, error) {
+	// A random bson id as filename
+	gridFSImage, _ := DB.GridFS("fs").Create(bson.NewObjectId().Hex())
+	defer gridFSImage.Close()
+
+	reader := bufio.NewReader(file)
+
+	// make a buffer to keep chunks that are read
+	buf := make([]byte, 1024)
+	for {
+		// read a chunk
+		n, err := reader.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if n == 0 {
+			break
+		}
+
+		// write a chunk
+		if _, err := gridFSImage.Write(buf[:n]); err != nil {
+			return nil, err
+		}
+	}
+
+	docID := bson.NewObjectId()
+	doc := &Hippo{
+		ID:    docID,
+		File:  gridFSImage,
+		Votes: 0,
+	}
+
+	if err := Collection.Insert(doc); err != nil {
+		return nil, err
+	}
+
+	return doc, nil
 }

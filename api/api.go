@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -45,28 +44,39 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check that the posted file is an image
 	// TODO: check that the md5 of the upload file doesn't match with anything that we have (mongo created md5s for us)
 
-	// A random bson id as filename
-	gridFSImage, _ := mongo.DB.GridFS("fs").Create(bson.NewObjectId().Hex())
-	defer gridFSImage.Close()
+	const MAXSIZE = 10 * 1024 // 10M
 
-	io.Copy(gridFSImage, r.Body)
-
-	docID := bson.NewObjectId()
-	doc := mongo.Hippo{
-		ID:    docID,
-		File:  gridFSImage,
-		Votes: 0,
+	if err := r.ParseMultipartForm(MAXSIZE); err != nil {
+		http.Error(w, "Not Multipart?", http.StatusBadRequest)
 	}
-	if err := mongo.Collection.Insert(doc); err != nil {
+
+	// TODO: support multiple file upload, for now, we return after the first insertion
+	var key string
+	for key, _ = range r.MultipartForm.File {
+		break
+	}
+	files := r.MultipartForm.File[key]
+
+	file, err := files[0].Open()
+	defer file.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	doc, err := mongo.InsertHippo(file)
+	if err != nil {
 		http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
 		return
 	}
 
 	// We don't want to store this on the DB
 	doc.Verified = false
-	doc.URL = cdn.GetHippoURL(docID.Hex())
+	doc.URL = cdn.GetHippoURL(doc.ID.Hex())
 
 	js, _ := json.Marshal(doc)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+
+	return
 }

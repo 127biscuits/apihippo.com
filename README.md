@@ -14,3 +14,18 @@ yet:
 
 	MONGOHQ_URL=mongodb://user:pass@kahana.mongohq.com:10009/apihippo \
 	    go run main.go
+
+Doc?
+----
+
+POST a hippo
+~~~~~~~~~~~~
+
+	curl -H "Accept: application/json; \
+                 Content-Type: multipart/form-data" \
+            http://localhost:8000/ --form "data=@/tmp/hippo.jpg"
+
+TODO
+----
+
+grep TODO . -R
