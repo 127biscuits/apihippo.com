@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
 	"log"
 	"mime/multipart"
@@ -9,6 +10,8 @@ import (
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+
+	"github.com/127biscuits/apihippo.com/cdn"
 )
 
 var (
@@ -29,6 +32,20 @@ type Hippo struct {
 	URL      string `json:"url"`
 	Verified bool   `json:"verified"`
 	Votes    int    `json:"votes"`
+}
+
+func (h *Hippo) Populate() {
+	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
+
+	h.URL = cdn.GetHippoURL(h.ID.Hex())
+	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
+}
+
+func (h Hippo) JSON() []byte {
+	h.Populate()
+
+	js, _ := json.Marshal(h)
+	return js
 }
 
 func init() {

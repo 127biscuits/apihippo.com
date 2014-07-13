@@ -9,7 +9,6 @@ import (
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 
-	"github.com/127biscuits/apihippo.com/cdn"
 	"github.com/127biscuits/apihippo.com/mongo"
 	"github.com/gorilla/mux"
 )
@@ -51,7 +50,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add URLs
 	for _, hippo := range response.Hippos {
-		hippo.URL = cdn.GetHippoURL(hippo.ID.Hex())
+		hippo.Populate()
 	}
 
 	js, _ := json.Marshal(response)
@@ -72,11 +71,8 @@ func GetHippoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	doc.URL = cdn.GetHippoURL(id)
-
-	js, _ := json.Marshal(doc)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+	w.Write(doc.JSON())
 }
 
 // PutHippoHandler is going to increment the number of votes for a cerating
@@ -135,13 +131,6 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We don't want to store this on the DB
-	doc.Verified = false
-	doc.URL = cdn.GetHippoURL(doc.ID.Hex())
-
-	js, _ := json.Marshal(doc)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-
-	return
+	w.Write(doc.JSON())
 }
