@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"labix.org/v2/mgo/bson"
 
@@ -56,6 +57,11 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 	files := r.MultipartForm.File[key]
+
+	if !strings.HasPrefix(files[0].Header["Content-Type"][0], "image/jpeg") {
+		http.Error(w, "I will just accept an \"image/*\" here!", http.StatusBadRequest)
+		return
+	}
 
 	file, err := files[0].Open()
 	defer file.Close()

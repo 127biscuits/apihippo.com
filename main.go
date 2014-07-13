@@ -26,7 +26,7 @@ func main() {
 
 	r.HandleFunc("/", api.GetHandler).Methods("GET").Headers("Accept", "application/json")
 	r.HandleFunc("/{id}", api.GetHippoHandler).Methods("GET").Headers("Accept", "application/json")
-	r.HandleFunc("/", api.PostHandler).Methods("POST").Headers("Content-Type", "multipart/form-data")
+	r.HandleFunc("/", api.PostHandler).Methods("POST")
 
 	r.HandleFunc("/", indexHandler)
 
