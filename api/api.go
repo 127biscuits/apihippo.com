@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 
 	"github.com/127biscuits/apihippo.com/cdn"
@@ -68,7 +68,6 @@ func GetHippoHandler(w http.ResponseWriter, r *http.Request) {
 
 	doc := &mongo.Hippo{}
 	if err := mongo.Collection.FindId(bson.ObjectIdHex(id)).One(doc); err != nil {
-		log.Panic(err)
 		http.NotFound(w, r)
 		return
 	}
@@ -78,6 +77,26 @@ func GetHippoHandler(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(doc)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+// PutHippoHandler is going to increment the number of votes for a cerating
+// hippo
+func PutHippoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	change := bson.M{"$inc": bson.M{"votes": 1}}
+	err := mongo.Collection.UpdateId(bson.ObjectIdHex(id), change)
+	switch {
+	case err == mgo.ErrNotFound:
+		http.NotFound(w, r)
+		return
+	case err != nil:
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	GetHippoHandler(w, r)
 }
 
 // PostHandler is able to receive hippo image and store them in our backend.

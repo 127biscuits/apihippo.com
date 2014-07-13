@@ -58,7 +58,8 @@ TODO
 - Add a CDN or at least a way to serve the pictures.
 - Properly test the pagination/limits with different hippos.
 - Add a GET parameter to filter by verified/unverified hippos.
-- Add the PUT method to allow votes.
+- Update verified at runtime (do not save the value on the DB, just have a
+  tresshold on the code).
 
 ### A lot of things to do anyway...
 
