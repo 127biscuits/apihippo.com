@@ -36,6 +36,11 @@ Doc?
                  Content-Type: multipart/form-data" \
             http://localhost:8000/ --form "data=@/tmp/hippo.jpg"
 
+### PUT a hippo (vote)
+
+	curl -H "Accept: application/json" -X PUT \
+	    http://localhost:8000/[id_returned_by_the_previous_post]
+
 ### GET a hippo
 
 	curl -H "Accept: application/json" \
@@ -49,6 +54,32 @@ Doc?
 ### GET the web
 
 	curl http://localhost:8000
+
+Concerns
+--------
+
+If you have read until here you are interested, so, I am not pretty sure if I
+should add the URLs of the resources on the response, something like:
+
+	"_links": {
+		"self": {
+			"href": "/123asd123"
+		}
+	},
+	"hippo: {
+		...
+	}
+
+Or in the case of a paginated response:
+
+	"_links: {
+		"self": { "href": "/" }
+		"next": { "next": "/?page=1" }
+		"previous": nil
+	}
+	"hippos": {
+		...
+	}
 
 TODO
 ----

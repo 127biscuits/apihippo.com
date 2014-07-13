@@ -34,6 +34,7 @@ type Hippo struct {
 	Votes    int    `json:"votes"`
 }
 
+// Populate is going to set the "calculated" fields to the struct
 func (h *Hippo) Populate() {
 	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
 
@@ -41,6 +42,7 @@ func (h *Hippo) Populate() {
 	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
 }
 
+// JSON is going to return the marshalled version of the struct
 func (h Hippo) JSON() []byte {
 	h.Populate()
 
