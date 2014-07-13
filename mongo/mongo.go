@@ -22,7 +22,7 @@ var (
 // Hippo is the struct used to store the information that we save in mongo and
 // we return to the user in JSON format
 type Hippo struct {
-	ID bson.ObjectId `bson:"_id"`
+	ID bson.ObjectId `bson:"_id"json:"id"`
 
 	File *mgo.GridFile `json:"-"`
 

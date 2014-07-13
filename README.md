@@ -36,7 +36,30 @@ Doc?
                  Content-Type: multipart/form-data" \
             http://localhost:8000/ --form "data=@/tmp/hippo.jpg"
 
+### GET a hippo
+
+	curl -H "Accept: application/json" \
+	    http://localhost:8000/[id_returned_by_the_previous_post]
+
+### GET all the hippos paginated
+
+	curl -H "Accept: application/json" \
+	    http://localhost:8000/?page=N  # page is optional
+
+### GET the web
+
+	curl http://localhost:8000
+
 TODO
 ----
+
+### Important
+
+- Add a CDN or at least a way to serve the pictures.
+- Properly test the pagination/limits with different hippos.
+- Add a GET parameter to filter by verified/unverified hippos.
+- Add the PUT method to allow votes.
+
+### A lot of things to do anyway...
 
 	grep TODO . -R

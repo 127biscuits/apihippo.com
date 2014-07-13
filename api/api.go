@@ -2,9 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"labix.org/v2/mgo/bson"
@@ -14,9 +14,49 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// PaginatedResponse is the struct used for paginated JSON responses
+type PaginatedResponse struct {
+	Meta struct {
+		HasPrevious bool `json:"hasPrevious"`
+		HasNext     bool `json:"hasNext"`
+		Pages       int  `json:"pages"`
+	} `json:"meta"`
+	Hippos []*mongo.Hippo `json:"hippos"`
+}
+
 // GetHandler is a JSON endpoint that returns ALL the hippos paginated
 func GetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "TODO: return all the hippos paginated")
+	// TODO: move it to a setting
+	const PAGESIZE = 10
+
+	page, err := strconv.Atoi(r.FormValue("page"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	all := mongo.Collection.Find(nil)
+	sliceAll := all.Limit(PAGESIZE)
+	if page > 0 {
+		sliceAll = sliceAll.Skip(PAGESIZE * (page - 1))
+	}
+
+	count, _ := all.Count()
+	response := &PaginatedResponse{}
+
+	response.Meta.Pages = count / PAGESIZE
+	response.Meta.HasPrevious = page > 0
+	response.Meta.HasNext = page < response.Meta.Pages
+
+	sliceAll.All(&response.Hippos)
+
+	// Add URLs
+	for _, hippo := range response.Hippos {
+		hippo.URL = cdn.GetHippoURL(hippo.ID.Hex())
+	}
+
+	js, _ := json.Marshal(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 // GetHippoHandler is going to find a hippo by Mongo ID and return it in JSON
