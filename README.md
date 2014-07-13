@@ -16,22 +16,21 @@ We're using MongoDB as our database. If you don't have a MongoDB database at han
 go MongoHQ and create a database there. There's a free layer and it will save all the fuss
 of installing and configuring it.
 
-If you go for a Database in MongoHQ, your connection string will be something like this
+If you go for a Database in MongoHQ, your connection string will be something like this:
 
-	MONGOHQ_URL=mongodb://user:pass@kahana.mongohq.com:10009/apihippo \
+	MONGODB_URL=mongodb://user:pass@kahana.mongohq.com:10009/apihippo \
 	    go run main.go
 
 
-Otherwise, if you're using a local install, you can run it as
+Otherwise, if you're using a local install, you can run it as:
 
-    MONGOHQ_URL=mongodb://localhost:27017/apihippo \
-        go run main.go
+	MONGODB_URL=mongodb://localhost:27017/apihippo \
+	    go run main.go
 
 Doc?
 ----
 
-POST a hippo
-~~~~~~~~~~~~
+### POST a hippo
 
 	curl -H "Accept: application/json; \
                  Content-Type: multipart/form-data" \
@@ -40,4 +39,4 @@ POST a hippo
 TODO
 ----
 
-grep TODO . -R
+	grep TODO . -R

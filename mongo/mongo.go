@@ -32,9 +32,9 @@ type Hippo struct {
 }
 
 func init() {
-	uri := os.Getenv("MONGOHQ_URL")
+	uri := os.Getenv("MONGODB_URL")
 	if uri == "" {
-		log.Panic("Please, set $MONGOHQ_URL as \"mongodb://user:pass@server.mongohq.com/db_name\"")
+		log.Panic("Please, set $MONGODB_URL as \"mongodb://user:pass@host/db_name\"")
 	}
 
 	sess, err := mgo.Dial(uri)
