@@ -22,14 +22,24 @@ func main() {
 	// TODO: add a config file
 	port := 8000
 
+	idRegExp := "/{id:[a-f0-9]{24}}"
+
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", api.GetHandler).Methods("GET").Headers("Accept", "application/json")
-	r.HandleFunc("/{id}", api.GetHippoHandler).Methods("GET").Headers("Accept", "application/json")
+	// This regexp looks kinda hacky, but I don't mind about the rest of the
+	// host.
+	// It needs to be here because we want the host matching first.
+	s := r.Host("cdn.{_:.*}").Subrouter()
+	s.HandleFunc(idRegExp, api.FakeCDNHandler)
 
-	r.HandleFunc("/", api.PostHandler).Methods("POST")
-
-	r.HandleFunc("/{id}", api.PutHippoHandler).Methods("PUT")
+	r.HandleFunc("/", api.GetHandler).
+		Methods("GET").Headers("Accept", "application/json")
+	r.HandleFunc(idRegExp, api.GetHippoHandler).
+		Methods("GET").Headers("Accept", "application/json")
+	r.HandleFunc("/", api.PostHandler).
+		Methods("POST")
+	r.HandleFunc(idRegExp, api.PutHippoHandler).
+		Methods("PUT")
 
 	r.HandleFunc("/", indexHandler)
 

@@ -134,3 +134,23 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(doc.JSON())
 }
+
+// FakeCDNHandler will return the image stream for the hippo.
+// TODO: this is just temporal until we have a proper CDN.
+func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	filename := vars["id"]
+
+	w.Header().Set("Content-Type", "image/jpeg") // TODO: check the type of the image before adding this header
+
+	file, err := mongo.GridFS.Open(filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	image := make([]byte, file.Size())
+	file.Read(image)
+	w.Write(image)
+}

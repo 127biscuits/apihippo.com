@@ -20,6 +20,9 @@ var (
 
 	// Collection is the only collection that we use with mongo (hippos ATM)
 	Collection *mgo.Collection
+
+	// GridFS is were we store our images in Mongo
+	GridFS *mgo.GridFS
 )
 
 // Hippo is the struct used to store the information that we save in mongo and
@@ -27,7 +30,7 @@ var (
 type Hippo struct {
 	ID bson.ObjectId `bson:"_id"json:"id"`
 
-	File *mgo.GridFile `json:"-"`
+	Filename string `json:"-"`
 
 	URL      string `json:"url"`
 	Verified bool   `json:"verified"`
@@ -38,7 +41,7 @@ type Hippo struct {
 func (h *Hippo) Populate() {
 	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
 
-	h.URL = cdn.GetHippoURL(h.ID.Hex())
+	h.URL = cdn.GetHippoURL(h.Filename)
 	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
 }
 
@@ -66,13 +69,15 @@ func init() {
 
 	DB = sess.DB("apihippo")
 	Collection = DB.C("hippos")
+	GridFS = DB.GridFS("fs")
 }
 
 // InsertHippo will store the Hippo on GridFS and return the Hippo document
 // created
 func InsertHippo(file multipart.File) (*Hippo, error) {
 	// A random bson id as filename
-	gridFSImage, _ := DB.GridFS("fs").Create(bson.NewObjectId().Hex())
+	filename := bson.NewObjectId().Hex()
+	gridFSImage, _ := GridFS.Create(filename)
 	defer gridFSImage.Close()
 
 	reader := bufio.NewReader(file)
@@ -97,9 +102,9 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 
 	docID := bson.NewObjectId()
 	doc := &Hippo{
-		ID:    docID,
-		File:  gridFSImage,
-		Votes: 0,
+		ID:       docID,
+		Filename: filename,
+		Votes:    0,
 	}
 
 	if err := Collection.Insert(doc); err != nil {

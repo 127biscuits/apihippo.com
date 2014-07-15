@@ -27,6 +27,14 @@ Otherwise, if you're using a local install, you can run it as:
 	MONGODB_URL=mongodb://localhost:27017/apihippo \
 	    go run main.go
 
+### subdomains
+
+It's quite important in case that you want to access to the hippo images that
+you configure the subdomains. For doing that, the easiest way is to edit your
+`/etc/hosts` and add the following line:
+
+		127.0.0.1 	cdn.apihippo.com
+
 Doc?
 ----
 
@@ -55,42 +63,24 @@ Doc?
 
 	curl http://localhost:8000
 
-Concerns
---------
+### GET a hippo image
 
-If you have read until here you are interested, so, I am not pretty sure if I
-should add the URLs of the resources on the response, something like:
+Please, remember to configure the subdomain on your `/etc/hosts` before
+accessing to this URL, if not, it's not going to work:
 
-	"_links": {
-		"self": {
-			"href": "/123asd123"
-		}
-	},
-	"hippo: {
-		...
-	}
-
-Or in the case of a paginated response:
-
-	"_links: {
-		"self": { "href": "/" }
-		"next": { "next": "/?page=1" }
-		"previous": nil
-	}
-	"hippos": {
-		...
-	}
+    curl http://cdn.apihippo.com:8000/[filename]
 
 TODO
 ----
 
 ### Important
 
-- Add a CDN or at least a way to serve the pictures.
+- Check that the file is an image before storing it in our CDN.
+- Return the proper time of the image on the Header (we are always returning
+  image/jpeg)
+- Configure a proper CDN.
 - Properly test the pagination/limits with different hippos.
 - Add a GET parameter to filter by verified/unverified hippos.
-- Update verified at runtime (do not save the value on the DB, just have a
-  tresshold on the code).
 
 ### A lot of things to do anyway...
 
