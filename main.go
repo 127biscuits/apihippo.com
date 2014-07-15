@@ -29,8 +29,11 @@ func main() {
 	// This regexp looks kinda hacky, but I don't mind about the rest of the
 	// host.
 	// It needs to be here because we want the host matching first.
-	s := r.Host("cdn.{_:.*}").Subrouter()
-	s.HandleFunc(idRegExp, api.FakeCDNHandler)
+	cdn := r.Host("cdn.{_:.*}").Subrouter()
+	cdn.HandleFunc(idRegExp, api.FakeCDNHandler)
+
+	random := r.Host("random.{_:.*}").Subrouter()
+	random.HandleFunc("/", api.RandomHippoHandler)
 
 	r.HandleFunc("/", api.GetHandler).
 		Methods("GET").Headers("Accept", "application/json")

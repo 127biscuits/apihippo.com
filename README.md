@@ -70,6 +70,12 @@ accessing to this URL, if not, it's not going to work:
 
     curl http://cdn.apihippo.com:8000/[filename]
 
+### GET a random hippo
+
+Please, read the advice above about `/etc/hosts` and then:
+
+    curl http://random.apihippo.com:8000/
+
 TODO
 ----
 
@@ -81,6 +87,9 @@ TODO
 - Configure a proper CDN.
 - Properly test the pagination/limits with different hippos.
 - Add a GET parameter to filter by verified/unverified hippos.
+- Move the documentation to sometime that can be demoed: Swagger could be a
+  good option.
+- Change paginated output to something more HAL style.
 
 ### A lot of things to do anyway...
 

@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"math/rand"
 	"mime/multipart"
 	"os"
+	"time"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -25,34 +27,6 @@ var (
 	GridFS *mgo.GridFS
 )
 
-// Hippo is the struct used to store the information that we save in mongo and
-// we return to the user in JSON format
-type Hippo struct {
-	ID bson.ObjectId `bson:"_id"json:"id"`
-
-	Filename string `json:"-"`
-
-	URL      string `json:"url"`
-	Verified bool   `json:"verified"`
-	Votes    int    `json:"votes"`
-}
-
-// Populate is going to set the "calculated" fields to the struct
-func (h *Hippo) Populate() {
-	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
-
-	h.URL = cdn.GetHippoURL(h.Filename)
-	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
-}
-
-// JSON is going to return the marshalled version of the struct
-func (h Hippo) JSON() []byte {
-	h.Populate()
-
-	js, _ := json.Marshal(h)
-	return js
-}
-
 func init() {
 	uri := os.Getenv("MONGODB_URL")
 	if uri == "" {
@@ -70,6 +44,38 @@ func init() {
 	DB = sess.DB("apihippo")
 	Collection = DB.C("hippos")
 	GridFS = DB.GridFS("fs")
+}
+
+// Hippo is the struct used to store the information that we save in mongo and
+// we return to the user in JSON format
+type Hippo struct {
+	ID bson.ObjectId `bson:"_id"json:"id"`
+
+	Filename string `json:"-"`
+
+	URL      string `json:"url"`
+	Verified bool   `json:"verified"`
+	Votes    int    `json:"votes"`
+
+	// Weird way of getting a random doc, but:
+	// http://cookbook.mongodb.org/patterns/random-attribute/
+	Random float32 `json:"-"`
+}
+
+// Populate is going to set the "calculated" fields to the struct
+func (h *Hippo) Populate() {
+	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
+
+	h.URL = cdn.GetHippoURL(h.Filename)
+	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
+}
+
+// JSON is going to return the marshalled version of the struct
+func (h Hippo) JSON() []byte {
+	h.Populate()
+
+	js, _ := json.Marshal(h)
+	return js
 }
 
 // InsertHippo will store the Hippo on GridFS and return the Hippo document
@@ -101,10 +107,14 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 	}
 
 	docID := bson.NewObjectId()
+	// TODO: I don't know if there is a better way to seed this
+	rand.Seed(time.Now().UnixNano())
+
 	doc := &Hippo{
 		ID:       docID,
 		Filename: filename,
 		Votes:    0,
+		Random:   rand.Float32(),
 	}
 
 	if err := Collection.Insert(doc); err != nil {

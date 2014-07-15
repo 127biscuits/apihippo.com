@@ -2,9 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -103,7 +106,11 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	const MAXSIZE = 10 * 1024 // 10M
 
 	if err := r.ParseMultipartForm(MAXSIZE); err != nil {
-		http.Error(w, "Not Multipart?", http.StatusBadRequest)
+		errMessage := fmt.Sprintf(
+			"Have you added the Content-Type: multipart/form-data header?"+
+				"This is the detailed error: %s", err.Error())
+		http.Error(w, errMessage, http.StatusBadRequest)
+		return
 	}
 
 	// TODO: support multiple file upload, for now, we return after the first insertion
@@ -153,4 +160,33 @@ func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
 	image := make([]byte, file.Size())
 	file.Read(image)
 	w.Write(image)
+}
+
+func RandomHippoHandler(w http.ResponseWriter, r *http.Request) {
+	// Ensure index on Random if we want efficience
+	// TODO: not pretty sure if I should do this always
+	err := mongo.Collection.EnsureIndexKey("random")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// TODO: wow, so much seed, wow, so random
+	rand.Seed(time.Now().UnixNano())
+
+	random := rand.Float32()
+	hippo := &mongo.Hippo{}
+
+	// TODO: just get the verified ones
+	hippoQuerySet := mongo.Collection.Find(
+		bson.M{
+			"random": bson.M{"$gte": random}})
+	if hippo == nil {
+		hippoQuerySet = mongo.Collection.Find(
+			bson.M{
+				"random": bson.M{"$lte": random}})
+	}
+	hippoQuerySet.One(hippo)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(hippo.JSON())
 }
