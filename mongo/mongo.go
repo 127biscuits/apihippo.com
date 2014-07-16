@@ -14,6 +14,7 @@ import (
 	"labix.org/v2/mgo/bson"
 
 	"github.com/127biscuits/apihippo.com/cdn"
+	"github.com/127biscuits/apihippo.com/settings"
 )
 
 var (
@@ -64,10 +65,8 @@ type Hippo struct {
 
 // Populate is going to set the "calculated" fields to the struct
 func (h *Hippo) Populate() {
-	const NEEDED_VOTES_TO_VERIFY = 1 // TODO: move to a setting
-
 	h.URL = cdn.GetHippoURL(h.Filename)
-	h.Verified = h.Votes > NEEDED_VOTES_TO_VERIFY
+	h.Verified = h.Votes > settings.Config.NeededVotesToVerify
 }
 
 // JSON is going to return the marshalled version of the struct

@@ -1,17 +1,29 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/127biscuits/apihippo.com/api"
+	"github.com/127biscuits/apihippo.com/settings"
 	"github.com/gorilla/mux"
 )
 
+var settingsPath string
+
+func init() {
+	flag.StringVar(&settingsPath, "s", "settings.json", "JSON configuration")
+}
+
 func main() {
-	// TODO: add a config file
-	port := 8000
+	flag.Parse()
+
+	// TODO: get it from a path
+	if err := settings.Load(settingsPath); err != nil {
+		log.Fatal("Error reading config file: ", err)
+	}
 
 	idRegExp := "/{id:[a-f0-9]{24}}"
 
@@ -37,6 +49,6 @@ func main() {
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
-	log.Print("Listening at port ", port)
-	log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
+	log.Print("Listening at port ", settings.Config.Port)
+	log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", settings.Config.Port), r))
 }

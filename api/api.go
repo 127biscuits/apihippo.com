@@ -103,7 +103,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check that the posted file is an image
 	// TODO: check that the md5 of the upload file doesn't match with anything that we have (mongo created md5s for us)
 
-	const MAXSIZE = 10 * 1024 // 10M
+	const MAXSIZE = 32 << 10 // 32M
 
 	if err := r.ParseMultipartForm(MAXSIZE); err != nil {
 		errMessage := fmt.Sprintf(
