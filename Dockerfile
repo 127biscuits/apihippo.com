@@ -17,7 +17,7 @@ ENV GOROOT  /usr/local/go
 
 WORKDIR /go/src/127biscuits/apihippo.com
 RUN go get github.com/127biscuits/apihippo.com
-ADD . /go/src/github.com/127biscuits/apihippo.com
+ADD . /go/src/127biscuits/apihippo.com
 RUN go get
 RUN go build
 
