@@ -2,21 +2,12 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/127biscuits/apihippo.com/api"
 	"github.com/gorilla/mux"
 )
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("templates/index.html")
-	if err != nil {
-		log.Panic("I can't start the service without finding the template folder!")
-	}
-	t.Execute(w, nil)
-}
 
 func main() {
 	// TODO: add a config file
@@ -43,8 +34,6 @@ func main() {
 		Methods("POST")
 	r.HandleFunc(idRegExp, api.PutHippoHandler).
 		Methods("PUT")
-
-	r.HandleFunc("/", indexHandler)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
