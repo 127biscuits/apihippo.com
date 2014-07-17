@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"crypto/md5"
+	"io"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -101,7 +103,6 @@ func PutHippoHandler(w http.ResponseWriter, r *http.Request) {
 // PostHandler is able to receive hippo image and store them in our backend.
 func PostHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check that the posted file is an image
-	// TODO: check that the md5 of the upload file doesn't match with anything that we have (mongo created md5s for us)
 
 	const MAXSIZE = 32 << 10 // 32M
 
@@ -132,12 +133,19 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	doc, err := mongo.InsertHippo(file)
-	if err != nil {
-		http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
-		return
-	}
+	md5 := md5.New()
+	io.Copy(md5, file)
+	chksum := md5.Sum(nil)
 
+	doc := mongo.getHippoByMD5(string(chksum[:]))
+
+	if(doc != nil){
+		doc, err := mongo.InsertHippo(file)
+		if err != nil {
+			http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
+			return
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(doc.JSON())
 }

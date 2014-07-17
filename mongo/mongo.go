@@ -58,7 +58,6 @@ type Hippo struct {
 	URL      string `json:"url"`
 	Verified bool   `json:"verified"`
 	Votes    int    `json:"votes"`
-	Checksum string `json:"checksum"`
 
 	// Weird way of getting a random doc, but:
 	// http://cookbook.mongodb.org/patterns/random-attribute/
@@ -111,25 +110,27 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 	// TODO: I don't know if there is a better way to seed this
 	rand.Seed(time.Now().UnixNano())
 
-	// MD5 checksum of the file
-	// TODO: Doing this here is not good. We should calculate the md5 of the file
-	// just after uploading, then check if it is in our DB and call insert only
-	// if the checksum cannot be found.
-	md5 := md5.New()
-	io.Copy(md5, file)
-	chksum := md5.Sum(nil)
-
 	doc := &Hippo{
 		ID:			docID,
 		Filename:	filename,
 		Votes:		0,
 		Random:		rand.Float32(),
-		Checksum:	string(chksum[:]),
 	}
 
 	if err := Collection.Insert(doc); err != nil {
 		return nil, err
 	}
 
+	return doc, nil
+}
+
+// checks if there's an entry with the received MD5
+// if there's it returns the Hippo
+func getHippoByMD5(string md5checksum) (*Hippo, error){
+	doc := Hippo{}
+	err = GridFS.Find(bson.M{"md5": "Ale"}).One(&doc)
+	if err != nil {
+		panic(err)
+	}
 	return doc, nil
 }
