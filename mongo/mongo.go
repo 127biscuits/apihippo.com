@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"os"
 	"time"
+	"crypto/md5"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -57,6 +58,7 @@ type Hippo struct {
 	URL      string `json:"url"`
 	Verified bool   `json:"verified"`
 	Votes    int    `json:"votes"`
+	Checksum string `json:"checksum"`
 
 	// Weird way of getting a random doc, but:
 	// http://cookbook.mongodb.org/patterns/random-attribute/
@@ -109,11 +111,20 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 	// TODO: I don't know if there is a better way to seed this
 	rand.Seed(time.Now().UnixNano())
 
+	// MD5 checksum of the file
+	// TODO: Doing this here is not good. We should calculate the md5 of the file
+	// just after uploading, then check if it is in our DB and call insert only
+	// if the checksum cannot be found.
+	md5 := md5.New()
+	io.Copy(md5, file)
+	chksum := md5.Sum(nil)
+
 	doc := &Hippo{
-		ID:       docID,
-		Filename: filename,
-		Votes:    0,
-		Random:   rand.Float32(),
+		ID:			docID,
+		Filename:	filename,
+		Votes:		0,
+		Random:		rand.Float32(),
+		Checksum:	string(chksum[:]),
 	}
 
 	if err := Collection.Insert(doc); err != nil {
