@@ -23,4 +23,9 @@ RUN go build
 
 EXPOSE 8000
 
-ENTRYPOINT ./apihippo.com -option value args
+
+ENTRYPOINT ["./apihippo.com"]
+
+
+# docker build -t ipedrazas/apihippo.com:1 .
+# docker run -d -p 8000:8000 -e MONGODB_URL=mongodb://user:password@server.mongohq.com:port/apihippo --name apihippo ipedrazas/apihippo.com:1

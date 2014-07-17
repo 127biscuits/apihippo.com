@@ -12,6 +12,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.hostname = "apihippo.dev"
   config.vm.network "private_network", ip: "192.168.53.10"
-
-
+  config.hostsupdater.aliases = ["cdn.apihippo.dev", "random.apihippo.dev"]
 end
