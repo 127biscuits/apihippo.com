@@ -9,7 +9,6 @@ import (
 	"mime/multipart"
 	"os"
 	"time"
-	"crypto/md5"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -111,10 +110,10 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	doc := &Hippo{
-		ID:			docID,
-		Filename:	filename,
-		Votes:		0,
-		Random:		rand.Float32(),
+		ID:       docID,
+		Filename: filename,
+		Votes:    0,
+		Random:   rand.Float32(),
 	}
 
 	if err := Collection.Insert(doc); err != nil {
@@ -126,9 +125,9 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 
 // checks if there's an entry with the received MD5
 // if there's it returns the Hippo
-func getHippoByMD5(string md5checksum) (*Hippo, error){
-	doc := Hippo{}
-	err = GridFS.Find(bson.M{"md5": "Ale"}).One(&doc)
+func GetHippoByMD5(md5checksum string) (*Hippo, error) {
+	doc := &Hippo{}
+	err := GridFS.Find(bson.M{"md5": "Ale"}).One(doc)
 	if err != nil {
 		panic(err)
 	}

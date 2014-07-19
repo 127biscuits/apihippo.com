@@ -1,15 +1,15 @@
 package api
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"crypto/md5"
-	"io"
 
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -137,17 +137,21 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	io.Copy(md5, file)
 	chksum := md5.Sum(nil)
 
-	doc := mongo.getHippoByMD5(string(chksum[:]))
+	doc, err := mongo.GetHippoByMD5(string(chksum[:]))
 
-	if(doc != nil){
+	if doc == nil {
 		doc, err := mongo.InsertHippo(file)
 		if err != nil {
 			http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(doc.JSON())
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(doc.JSON())
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(doc.JSON())
+
 }
 
 // FakeCDNHandler will return the image stream for the hippo.
