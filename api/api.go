@@ -139,19 +139,26 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	doc, err := mongo.GetHippoByMD5(string(chksum[:]))
 
-	if doc == nil {
+	if doc != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		w.Write(doc.JSON())
+		return
+	}
+
+	if err == mgo.ErrNotFound {
 		doc, err := mongo.InsertHippo(file)
 		if err != nil {
 			http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(201)
 		w.Write(doc.JSON())
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(doc.JSON())
+		return
 	}
 
+	w.WriteHeader(500)
 }
 
 // FakeCDNHandler will return the image stream for the hippo.

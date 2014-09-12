@@ -127,9 +127,9 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 // if there's it returns the Hippo
 func GetHippoByMD5(md5checksum string) (*Hippo, error) {
 	doc := &Hippo{}
-	err := GridFS.Find(bson.M{"md5": "Ale"}).One(doc)
-	if err != nil {
-		panic(err)
+	query := GridFS.Find(bson.M{"md5": md5checksum})
+	if err != nil && err != mgo.ErrNotFound {
+		return nil, err
 	}
-	return doc, nil
+	return doc, err
 }
