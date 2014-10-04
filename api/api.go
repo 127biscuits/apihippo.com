@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -119,25 +119,23 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	for key, _ = range r.MultipartForm.File {
 		break
 	}
-	files := r.MultipartForm.File[key]
+	file, fileHeader, err := r.FormFile(key)
 
-	if !strings.HasPrefix(files[0].Header["Content-Type"][0], "image/jpeg") {
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	defer file.Close()
+
+	// TODO: accept PNGs as well (the header is "application/octet-stream".
+	// We should check file headers and not request headers.
+	if !strings.HasPrefix(fileHeader.Header.Get("Content-Type"), "image/") {
 		http.Error(w, "I will just accept an \"image/*\" here!", http.StatusBadRequest)
 		return
 	}
 
-	file, err := files[0].Open()
-	defer file.Close()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	md5 := md5.New()
-	io.Copy(md5, file)
-	chksum := md5.Sum(nil)
-
-	doc, err := mongo.GetHippoByMD5(string(chksum[:]))
+	checksum := fmt.Sprintf("%x", md5.Sum(fileBytes))
+	doc, err := mongo.GetHippoByMD5(checksum)
 
 	if doc != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -147,7 +145,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == mgo.ErrNotFound {
-		doc, err := mongo.InsertHippo(file)
+		doc, err := mongo.InsertHippo(fileBytes)
 		if err != nil {
 			http.Error(w, "Holy s*£%t! I couldn't store your hippo!", http.StatusInternalServerError)
 			return

@@ -87,8 +87,8 @@ TODO
 - Configure a proper CDN.
 - Properly test the pagination/limits with different hippos.
 - Add a GET parameter to filter by verified/unverified hippos.
-- Move the documentation to sometime that can be demoed: Swagger could be a
-  good option.
+- Move the documentation to some place where it can be demoed: Swagger could be
+  a good option.
 - Change paginated output to something more HAL style.
 
 ### A lot of things to do anyway...

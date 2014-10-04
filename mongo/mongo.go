@@ -1,12 +1,9 @@
 package mongo
 
 import (
-	"bufio"
 	"encoding/json"
-	"io"
 	"log"
 	"math/rand"
-	"mime/multipart"
 	"os"
 	"time"
 
@@ -79,31 +76,13 @@ func (h Hippo) JSON() []byte {
 
 // InsertHippo will store the Hippo on GridFS and return the Hippo document
 // created
-func InsertHippo(file multipart.File) (*Hippo, error) {
+func InsertHippo(fileBytes []byte) (*Hippo, error) {
 	// A random bson id as filename
 	filename := bson.NewObjectId().Hex()
+
 	gridFSImage, _ := GridFS.Create(filename)
 	defer gridFSImage.Close()
-
-	reader := bufio.NewReader(file)
-
-	// make a buffer to keep chunks that are read
-	buf := make([]byte, 1024)
-	for {
-		// read a chunk
-		n, err := reader.Read(buf)
-		if err != nil && err != io.EOF {
-			return nil, err
-		}
-		if n == 0 {
-			break
-		}
-
-		// write a chunk
-		if _, err := gridFSImage.Write(buf[:n]); err != nil {
-			return nil, err
-		}
-	}
+	gridFSImage.Write(fileBytes)
 
 	docID := bson.NewObjectId()
 	// TODO: I don't know if there is a better way to seed this
@@ -127,8 +106,11 @@ func InsertHippo(file multipart.File) (*Hippo, error) {
 // if there's it returns the Hippo
 func GetHippoByMD5(md5checksum string) (*Hippo, error) {
 	doc := &Hippo{}
-	query := GridFS.Find(bson.M{"md5": md5checksum})
-	if err != nil && err != mgo.ErrNotFound {
+	err := GridFS.Find(bson.M{"md5": md5checksum}).One(doc)
+	if err == mgo.ErrNotFound {
+		return nil, err
+	}
+	if err != nil {
 		return nil, err
 	}
 	return doc, err
