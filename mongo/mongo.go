@@ -2,7 +2,7 @@ package mongo
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
 	"math/rand"
 	"os"
 	"time"
@@ -25,23 +25,25 @@ var (
 	GridFS *mgo.GridFS
 )
 
-func init() {
+func Init() (*mgo.Session, error) {
 	uri := os.Getenv("MONGODB_URL")
 	if uri == "" {
-		log.Panic("Please, set $MONGODB_URL as \"mongodb://user:pass@host/db_name\"")
+		err := errors.New("Please, set $MONGODB_URL as \"mongodb://user:pass@host/db_name\"")
+		return nil, err
 	}
 
 	sess, err := mgo.Dial(uri)
 	if err != nil {
-		log.Panic("Can't connect to mongo, go error %v\n", err)
+		return nil, err
 	}
-	// TODO: we can not defer here, perhaps on the main?
-	// defer sess.Close()
+
 	sess.SetSafe(&mgo.Safe{})
 
 	DB = sess.DB("apihippo")
 	Collection = DB.C("hippos")
 	GridFS = DB.GridFS("fs")
+
+	return sess, nil
 }
 
 // Hippo is the struct used to store the information that we save in mongo and
@@ -85,7 +87,7 @@ func InsertHippo(fileBytes []byte) (*Hippo, error) {
 	gridFSImage.Write(fileBytes)
 
 	docID := bson.NewObjectId()
-	// TODO: I don't know if there is a better way to seed this
+	// I don't know if there is a better way to seed this
 	rand.Seed(time.Now().UnixNano())
 
 	doc := &Hippo{

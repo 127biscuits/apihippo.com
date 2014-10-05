@@ -1,0 +1,13 @@
+# Where the server (api & FE) will be listening
+server:
+  port: 8000
+  max_file_size: 32768 # 32M
+
+cdn:
+  address: http://cdn.apihippo.com:8000
+
+# Needed votes to verify a hippo
+verify_threshold: 1
+pagination_size: 10
+
+debug: true

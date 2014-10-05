@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/127biscuits/apihippo.com/api"
+	"github.com/127biscuits/apihippo.com/mongo"
 	"github.com/127biscuits/apihippo.com/settings"
 	"github.com/gorilla/mux"
 )
@@ -14,16 +15,21 @@ import (
 var settingsPath string
 
 func init() {
-	flag.StringVar(&settingsPath, "s", "settings.json", "JSON configuration")
+	flag.StringVar(&settingsPath, "s", "settings.yaml", "JSON configuration")
 }
 
 func main() {
 	flag.Parse()
 
-	// TODO: get it from a path
 	if err := settings.Load(settingsPath); err != nil {
 		log.Fatal("Error reading config file: ", err)
 	}
+
+	s, err := mongo.Init()
+	if err != nil {
+		log.Panic(err)
+	}
+	defer s.Close()
 
 	idRegExp := "/{id:[a-f0-9]{24}}"
 
@@ -49,6 +55,6 @@ func main() {
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
-	log.Print("Listening at port ", settings.Config.Port)
-	log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", settings.Config.Port), r))
+	log.Print("Listening at port ", settings.Config.Server.Port)
+	log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", settings.Config.Server.Port), r))
 }

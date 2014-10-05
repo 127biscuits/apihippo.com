@@ -2,11 +2,11 @@ package cdn
 
 import (
 	"fmt"
+
+	"github.com/127biscuits/apihippo.com/settings"
 )
 
 // GetHippoURL return the URL of the hippo on our CDN
-// TODO: this is a fake URL for now
 func GetHippoURL(id string) string {
-	// TODO: This should go to a setting
-	return fmt.Sprintf("http://cdn.apihippo.com:8000/%s", id)
+	return fmt.Sprintf("%s/%s", settings.Config.CDN.Address, id)
 }

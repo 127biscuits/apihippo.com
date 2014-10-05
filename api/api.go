@@ -15,6 +15,7 @@ import (
 	"labix.org/v2/mgo/bson"
 
 	"github.com/127biscuits/apihippo.com/mongo"
+	"github.com/127biscuits/apihippo.com/settings"
 	"github.com/gorilla/mux"
 )
 
@@ -31,9 +32,11 @@ type PaginatedResponse struct {
 // GetHandler is a JSON endpoint that returns ALL the hippos paginated.
 // It can be filtered with ?verified=true or ?verified=false
 func GetHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: move it to a setting
-	const PAGESIZE = 10
-	var query interface{}
+	var (
+		pageSize      = settings.Config.PageSize
+		votesToVerify = settings.Config.NeededVotesToVerify
+		query         interface{}
+	)
 
 	page, err := strconv.Atoi(r.FormValue("page"))
 	if err != nil && r.FormValue("page") != "" {
@@ -46,23 +49,23 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		if verified {
-			// TODO: move that 3 to settings
-			query = bson.M{"votes": bson.M{"$gte": 3}}
+			query = bson.M{"votes": bson.M{"$gte": votesToVerify}}
 		} else {
-			query = bson.M{"votes": bson.M{"$lt": 3}}
+			query = bson.M{"votes": bson.M{"$lt": votesToVerify}}
 		}
 	}
 
 	all := mongo.Collection.Find(query)
-	sliceAll := all.Limit(PAGESIZE)
+	sliceAll := all.Limit(pageSize)
 	if page > 0 {
-		sliceAll = sliceAll.Skip(PAGESIZE * (page - 1))
+		sliceAll = sliceAll.Skip(pageSize * (page - 1))
 	}
 
 	count, _ := all.Count()
 	response := &PaginatedResponse{}
 
-	response.Meta.Pages = count / PAGESIZE
+	response.Meta.Pages = count / pageSize
+
 	response.Meta.HasPrevious = page > 0
 	response.Meta.HasNext = page < response.Meta.Pages
 
@@ -118,10 +121,7 @@ func PutHippoHandler(w http.ResponseWriter, r *http.Request) {
 // PostHandler is able to receive hippo image and store them in our backend.
 func PostHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check that the posted file is an image
-
-	const MAXSIZE = 32 << 10 // 32M
-
-	if err := r.ParseMultipartForm(MAXSIZE); err != nil {
+	if err := r.ParseMultipartForm(int64(settings.Config.Server.MaxFileSize)); err != nil {
 		errMessage := fmt.Sprintf(
 			"Have you added the Content-Type: multipart/form-data header?"+
 				"This is the detailed error: %s", err.Error())
@@ -194,31 +194,47 @@ func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(image)
 }
 
+// RandomHippoHandler will return a JSON response with a verified hippo
 func RandomHippoHandler(w http.ResponseWriter, r *http.Request) {
+	var votesToVerify = settings.Config.NeededVotesToVerify
+
 	// Ensure index on Random if we want efficience
-	// TODO: not pretty sure if I should do this always
 	err := mongo.Collection.EnsureIndexKey("random")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	// TODO: wow, so much seed, wow, so random
 	rand.Seed(time.Now().UnixNano())
-
 	random := rand.Float32()
+
 	hippo := &mongo.Hippo{}
 
-	// TODO: just get the verified ones
-	hippoQuerySet := mongo.Collection.Find(
+	// We will need to query both in case that we don't find a result in the
+	// first interval
+	queries := []interface{}{
 		bson.M{
-			"random": bson.M{"$gte": random}})
-	if hippo == nil {
-		hippoQuerySet = mongo.Collection.Find(
-			bson.M{
-				"random": bson.M{"$lte": random}})
+			"random": bson.M{"$gte": random},
+			"votes":  bson.M{"$gte": votesToVerify},
+		},
+		bson.M{
+			"random": bson.M{"$lte": random},
+			"votes":  bson.M{"$gte": votesToVerify},
+		},
 	}
-	hippoQuerySet.One(hippo)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(hippo.JSON())
+	for _, query := range queries {
+		qs := mongo.Collection.Find(query)
+		if n, _ := qs.Count(); n > 0 {
+			err := qs.One(hippo)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(hippo.JSON())
+			return
+		}
+	}
+	http.NotFound(w, r)
+	return
 }

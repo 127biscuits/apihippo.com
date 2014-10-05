@@ -1,16 +1,25 @@
 package settings
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
 type config struct {
-	Port int
+	Server struct {
+		Port        int
+		MaxFileSize int `yaml:"max_file_size"`
+	}
 
-	NeededVotesToVerify int `json:"verify_threshold"`
+	NeededVotesToVerify int `yaml:"verify_threshold"`
+	PageSize            int `yaml:"pagination_size"`
+
+	CDN struct {
+		Address string
+	}
+
+	Debug bool
 }
 
 var Config config
@@ -21,9 +30,8 @@ func Load(path string) error {
 		return err
 	}
 
-	if err := json.Unmarshal(file, &Config); err != nil {
-		errMessage := fmt.Sprintf("Can't unmarshal: %s. Error: %v", path, err)
-		return errors.New(errMessage)
+	if err := yaml.Unmarshal(file, &Config); err != nil {
+		return err
 	}
 
 	return nil
