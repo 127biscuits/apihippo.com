@@ -47,7 +47,7 @@ Doc?
 ### PUT a hippo (vote)
 
 	curl -H "Accept: application/json" -X PUT \
-	    http://localhost:8000/[id_returned_by_the_previous_post]
+	    http://localhost:8000/[id_returned_by_the_previous_post]/vote
 
 ### GET a hippo
 
@@ -58,6 +58,13 @@ Doc?
 
 	curl -H "Accept: application/json" \
 	    http://localhost:8000/?page=N  # page is optional
+
+And just the verified:
+
+	curl -H "Accept: application/json" \
+	    http://localhost:8000/?verified=true
+
+I am pretty sure that you are clever enough to get the non verified ones :)
 
 ### GET the web
 
@@ -86,7 +93,6 @@ TODO
   image/jpeg)
 - Configure a proper CDN.
 - Properly test the pagination/limits with different hippos.
-- Add a GET parameter to filter by verified/unverified hippos.
 - Move the documentation to some place where it can be demoed: Swagger could be
   a good option.
 - Change paginated output to something more HAL style.

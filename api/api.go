@@ -28,17 +28,32 @@ type PaginatedResponse struct {
 	Hippos []*mongo.Hippo `json:"hippos"`
 }
 
-// GetHandler is a JSON endpoint that returns ALL the hippos paginated
+// GetHandler is a JSON endpoint that returns ALL the hippos paginated.
+// It can be filtered with ?verified=true or ?verified=false
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: move it to a setting
 	const PAGESIZE = 10
+	var query interface{}
 
 	page, err := strconv.Atoi(r.FormValue("page"))
-	if err != nil {
+	if err != nil && r.FormValue("page") != "" {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	all := mongo.Collection.Find(nil)
+	if r.FormValue("verified") != "" {
+		verified, err := strconv.ParseBool(r.FormValue("verified"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		if verified {
+			// TODO: move that 3 to settings
+			query = bson.M{"votes": bson.M{"$gte": 3}}
+		} else {
+			query = bson.M{"votes": bson.M{"$lt": 3}}
+		}
+	}
+
+	all := mongo.Collection.Find(query)
 	sliceAll := all.Limit(PAGESIZE)
 	if page > 0 {
 		sliceAll = sliceAll.Skip(PAGESIZE * (page - 1))
