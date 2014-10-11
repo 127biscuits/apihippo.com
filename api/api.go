@@ -196,6 +196,9 @@ func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
 
 // RandomHippoHandler will return a JSON response with a verified hippo
 func RandomHippoHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: it should be something better than this
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	var (
 		comparator    = "$gte"
 		votesToVerify = settings.Config.NeededVotesToVerify

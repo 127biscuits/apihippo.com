@@ -2,24 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="API for Hippos">
   <meta name="author" content="Iván Pedrazas & Álex González">
-  <title>apihippo</title>
-  <link rel="stylesheet" href="/css/style.css"/>
+  <title>apihippo.com</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 </head>
 
-<body>
-  <div class="menuItems">
-    <ul class="nav">
-      <li><a href="get_started.html">Get started</a></li>
-      <li><a href="about.html">About</a></li>
-    </ul>
+<body ng-app="hippos">
+  <div ng-controller="HippoController">
+    <p>
+      <img src="{{hippo.url}}"/>
+    </p>
+    <p>
+      <button type="submit" class="btn btn-danger" ng-click="get()">
+        <i class="glyphicon glyphicon-thumbs-down"></i> Hippo!
+      </button>
+      <button type="submit" class="btn btn-success" ng-click="vote(hippo.id)">
+        <i class="glyphicon glyphicon-thumbs-up"></i> Hippo!
+      </button>
+    </p>
   </div>
-  <h1 class="title">apihippo.com</h1>
-  <h2 class="subtitle"><a href="#" class="verb" data-verb="get">GET</a> | POST | PUT <br/><span class="hippo">a Hippo</span></h2>
-  <div class="details">Hippo Details</div>
-  <img src="/img/hippoheader-1100x198.jpg" class="banner">
+
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+  <script type="text/javascript" src="/js/apihippo.js"></script>
 
   <!-- Piwik -->
   <script type="text/javascript">
@@ -36,7 +41,5 @@
   </script>
   <noscript><p><img src="http://analytics.ccs.im/piwik.php?idsite=3" style="border:0;" alt="" /></p></noscript>
   <!-- End Piwik Code -->
-  <script type="text/javascript" src="/js/lib/jquery/jquery-1.9.1.js"></script>
-  <script type="text/javascript" src="/js/apihippo.js"></script>
 </body>
 </html>
