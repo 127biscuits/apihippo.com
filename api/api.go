@@ -33,9 +33,10 @@ type PaginatedResponse struct {
 // It can be filtered with ?verified=true or ?verified=false
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	var (
+		comparator    = "$gte"
 		pageSize      = settings.Config.PageSize
-		votesToVerify = settings.Config.NeededVotesToVerify
 		query         interface{}
+		votesToVerify = settings.Config.NeededVotesToVerify
 	)
 
 	page, err := strconv.Atoi(r.FormValue("page"))
@@ -49,10 +50,9 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		if verified {
-			query = bson.M{"votes": bson.M{"$gte": votesToVerify}}
-		} else {
-			query = bson.M{"votes": bson.M{"$lt": votesToVerify}}
+			comparator = "$lt"
 		}
+		query = bson.M{"votes": bson.M{comparator: votesToVerify}}
 	}
 
 	all := mongo.Collection.Find(query)
@@ -98,9 +98,9 @@ func GetHippoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(doc.JSON())
 }
 
-// PutHippoHandler is going to increment the number of votes for a cerating
+// VoteHippoHandler is going to increment the number of votes for a cerating
 // hippo
-func PutHippoHandler(w http.ResponseWriter, r *http.Request) {
+func VoteHippoHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -196,7 +196,10 @@ func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
 
 // RandomHippoHandler will return a JSON response with a verified hippo
 func RandomHippoHandler(w http.ResponseWriter, r *http.Request) {
-	var votesToVerify = settings.Config.NeededVotesToVerify
+	var (
+		comparator    = "$gte"
+		votesToVerify = settings.Config.NeededVotesToVerify
+	)
 
 	// Ensure index on Random if we want efficience
 	err := mongo.Collection.EnsureIndexKey("random")
@@ -208,20 +211,24 @@ func RandomHippoHandler(w http.ResponseWriter, r *http.Request) {
 
 	hippo := &mongo.Hippo{}
 
-	// We will need to query both in case that we don't find a result in the
-	// first interval
-	queries := []interface{}{
-		bson.M{
-			"random": bson.M{"$gte": random},
-			"votes":  bson.M{"$gte": votesToVerify},
-		},
-		bson.M{
-			"random": bson.M{"$lte": random},
-			"votes":  bson.M{"$gte": votesToVerify},
-		},
+	if r.FormValue("verified") != "" {
+		verified, err := strconv.ParseBool(r.FormValue("verified"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		if !verified {
+			comparator = "$lt"
+		}
 	}
 
-	for _, query := range queries {
+	// We will need to query both in case that we don't find a result in the
+	// first interval
+	for _, r := range []string{"$gte", "$lte"} {
+		query := bson.M{
+			"random": bson.M{r: random},
+			"votes":  bson.M{comparator: votesToVerify},
+		}
+
 		qs := mongo.Collection.Find(query)
 		if n, _ := qs.Count(); n > 0 {
 			err := qs.One(hippo)

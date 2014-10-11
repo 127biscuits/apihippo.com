@@ -50,8 +50,8 @@ func main() {
 		Methods("GET").Headers("Accept", "application/json")
 	r.HandleFunc("/", api.PostHandler).
 		Methods("POST")
-	r.HandleFunc(idRegExp+"/vote", api.PutHippoHandler).
-		Methods("PUT")
+	r.HandleFunc(idRegExp+"/vote", api.VoteHippoHandler).
+		Methods("POST")
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
