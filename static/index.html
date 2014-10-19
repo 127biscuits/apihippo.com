@@ -5,22 +5,41 @@
   <meta name="description" content="API for Hippos">
   <meta name="author" content="Iván Pedrazas & Álex González">
   <title>apihippo.com</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/apihippo.css">
 </head>
 
 <body ng-app="hippos">
-  <div ng-controller="HippoController">
-    <p>
-      <img src="{{hippo.url}}"/>
-    </p>
-    <p>
-      <button type="submit" class="btn btn-danger" ng-click="get()">
-        <i class="glyphicon glyphicon-thumbs-down"></i> Hippo!
-      </button>
-      <button type="submit" class="btn btn-success" ng-click="vote(hippo.id)">
-        <i class="glyphicon glyphicon-thumbs-up"></i> Hippo!
-      </button>
-    </p>
+  <nav class="navbar navbar-inverse" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">apihippo.com</a>
+      </div>
+    </div>
+  </nav>
+
+  <div ng-controller="HippoController" class="hippo-controller">
+
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <img src="{{hippo.url}}"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-2 col-md-offset-4 text-center">
+        <button type="submit" class="btn btn-lg btn-danger" ng-click="get()">
+          <i class="glyphicon glyphicon-remove"></i> Hippo!
+        </button>
+      </div>
+      <div class="col-md-2 text-center">
+        <button type="submit" class="btn btn-lg btn-success" ng-click="vote(hippo.id)">
+          <i class="glyphicon glyphicon-heart"></i> Hippo!
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
