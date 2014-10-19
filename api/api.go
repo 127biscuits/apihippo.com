@@ -1,9 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -17,6 +20,7 @@ import (
 	"github.com/127biscuits/apihippo.com/mongo"
 	"github.com/127biscuits/apihippo.com/settings"
 	"github.com/gorilla/mux"
+	"github.com/nfnt/resize"
 )
 
 // PaginatedResponse is the struct used for paginated JSON responses
@@ -177,8 +181,31 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 // FakeCDNHandler will return the image stream for the hippo.
 // TODO: this is just temporal until we have a proper CDN.
 func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
+	var width, height int
+
 	vars := mux.Vars(r)
 	filename := vars["id"]
+
+	err := func() (err error) {
+		if w := r.FormValue("width"); w != "" {
+			width, err = strconv.Atoi(w)
+			if err != nil {
+				return err
+			}
+		}
+		if h := r.FormValue("height"); h != "" {
+			height, err = strconv.Atoi(h)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest) //"width & height params must be integers!", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "image/jpeg") // TODO: check the type of the image before adding this header
 
@@ -189,9 +216,32 @@ func FakeCDNHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	image := make([]byte, file.Size())
-	file.Read(image)
-	w.Write(image)
+	imageBytes := make([]byte, file.Size())
+	file.Read(imageBytes)
+
+	// No resizing needed
+	if width+height == 0 {
+		w.Write(imageBytes)
+		return
+	}
+
+	err = func() error {
+		originalImage, _, err := image.Decode(bytes.NewReader(imageBytes))
+		if err != nil {
+			return err
+		}
+
+		resizedImage := resize.Resize(uint(width), uint(height), originalImage, resize.Lanczos3)
+		if err = jpeg.Encode(w, resizedImage, nil); err != nil {
+			return err
+		}
+
+		return nil
+	}()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // RandomHippoHandler will return a JSON response with a verified hippo
